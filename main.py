@@ -91,12 +91,13 @@ class Ship:
         return self.ship_img.get_height()
 
 class Player(Ship):
-    def __init__(self, x, y, health=100):
+    def __init__(self, x, y, health=100, score=0):
         super().__init__(x, y, health)
         self.ship_img = YELLOW_SPACE_SHIP
         self.laser_img = YELLOW_LASER
         self.mask = pygame.mask.from_surface(self.ship_img)
         self.max_health = health
+        self.score = score
 
     def move_lasers(self, vel, objs):
         self.cooldown()
@@ -108,6 +109,14 @@ class Player(Ship):
                 for obj in objs:
                     if laser.collision(obj):
                         objs.remove(obj)
+                        if isinstance(obj, Enemy):
+                            score_map = {
+                                "red": 100,
+                                "green": 200,
+                                "blue": 300
+                            }
+
+                            self.score += score_map[obj.color]
                         if laser in self.lasers:
                             self.lasers.remove(laser)
 
@@ -128,6 +137,7 @@ class Enemy(Ship):
 
     def __init__(self, x, y, color, health=100):
         super().__init__(x, y, health)
+        self.color = color
         self.ship_img, self.laser_img = self.COLOR_MAP[color]
         self.mask = pygame.mask.from_surface(self.ship_img)
 
@@ -173,13 +183,15 @@ def main():
         # Draw text
         lives_label = main_font.render(f"Lives: {lives}", 1, (255,255,255))
         level_label = main_font.render(f"Level: {level}", 1, (255,255,255))
+        score_label = main_font.render(f"Score: {player.score}", 1, (255,255,255))
+        
 
         WIN.blit(lives_label, (10, 10))
         WIN.blit(level_label, (WIDTH - level_label.get_width() - 10, 10))
+        WIN.blit(score_label, (10, 50))
         
         for enemy in enemies:
             enemy.draw(WIN)
-
         player.draw(WIN)
 
         if lost:
@@ -216,7 +228,7 @@ def main():
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                quit()
+                run = False
 
         keys = pygame.key.get_pressed()
         if (keys[pygame.K_a] or keys[pygame.K_LEFT]) and player.x - player_velocity > 0:
@@ -250,7 +262,7 @@ def main():
         
  
 def main_menu():
-    title_font = pygame.font.SysFont("comicsans", 70)
+    title_font = pygame.font.SysFont("comicsans", 50)
     run = True
     while run:
         WIN.blit(BG, (0, 0))
@@ -267,4 +279,5 @@ def main_menu():
 
     pygame.quit()
 
-main_menu()           
+if __name__ == '__main__':
+    main_menu()           
